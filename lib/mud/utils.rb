@@ -1,0 +1,108 @@
+module Mud
+
+  module Utils
+    JS_DIRECTORY = File.expand_path(File.join File.dirname(__FILE__), '..', '..', 'js')
+
+    ROOT_DIRECTORY = File.absolute_path('/')
+    HOME_DIRECTORY = Dir.home
+
+    [:js, :root, :home].each do |name|
+      name = "#{name}_directory"
+      module_eval %{
+        def #{name}
+          #{name.upcase}
+        end
+      }
+    end
+
+    def compile(src, type = 'simple', out = nil)
+      raise ArgumentError.new("Type must be either 'simple' or 'advanced', was '#{type}'") unless ['simple', 'advanced'].include?(type.to_s)
+      level = "#{type.upcase}_OPTIMIZATIONS"
+
+      response = Net::HTTP.post_form(URI.parse('http://closure-compiler.appspot.com/compile'),
+        :output_info => 'compiled_code',
+        :compilation_level => level,
+        :warning_level => 'default',
+        :js_code => src)
+
+      if out
+        File.open(out) { |f| f.write(response.body) }
+      end
+
+      response.body
+    end
+
+    def join(basepath, *paths)
+      basepath.start_with?('http://') ? URI.join(basepath, *paths) : File.join(basepath, *paths)
+    end
+
+    def render(location, opts = {})
+      if location.is_a?(Hash)
+        opts = location
+      else
+        guess(location).update(opts)
+      end
+
+      type, path = opts.first
+
+      content = case type
+        when :erb, :file then
+          abs = path.start_with?(root_directory) || path.start_with?('/')
+          path = File.join(js_directory, path) unless abs
+          File.open(path) { |f| f.read }
+        when :http then
+          response Net::HTTP.get_response(URI.parse(path))
+          response.error! unless (200..299).include?(response.code.to_i)
+          response.body
+        else
+          raise ArgumentError.new("Unknown type '#{type}'")
+      end
+
+      if type == :erb
+        locals = opts[:locals] || {}
+        content = ERB.new(content).result(LocalsBinding.new(locals).binding)
+      end
+
+      content
+    end
+    alias :cat :render
+
+    private
+
+    class LocalsBinding < BasicObject
+      def initialize(locals, &block)
+        @_locals = locals
+
+        locals.each_pair do |name, value|
+          instance_eval %{
+            def #{name}
+              _get(:#{name})
+            end
+          }
+        end
+
+        instance_eval(&block) if block
+      end
+
+      def render(opts)
+        ::Mud.render(opts)
+      end
+
+      def binding
+        ::Proc.new {}.binding
+      end
+
+      private
+
+      def _get(name)
+        @_locals[name.to_sym] || @_locals[name.to_s]
+      end
+    end
+
+    def guess(path)
+      protocol = (path.match(/^(\w)+:\/\//) || [])[1] || 'file'
+      { protocol.to_sym => path.gsub(/^file:\/\//, '') }
+    end
+  end
+
+end

@@ -1,0 +1,9 @@
+(function(require) {
+    <%= render :erb => 'inline_modules.js.erb', :locals => { :modules => modules } %>
+
+    <% modules.each do |mod| %>
+        window[<%= mod.name.to_json %>] = require(<%= mod.name.to_json %>);
+    <% end %>
+})();
+
+<%= render :erb => 'list.js.erb', :locals => { :list => appends } %>

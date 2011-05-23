@@ -1,0 +1,11 @@
+<%= render :file => 'require.js' %>
+
+<%= render :file => 'JSON.js' %>
+
+<% modules.each do |mod| %>
+    require.define(<%= mod.name.to_json %>, function(module, exports) {
+        <%= mod.content %>
+    });
+<% end %>
+
+<%= render :erb => 'list.js.erb', :locals => { :list => appends } if defined?(appends) %>

@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+
+require 'mud'
+require 'mud/cli'
+
+begin
+  Mud::CLI.start
+rescue Mud::ResolveError => err
+  puts err.message, "Try running: mud install #{err.name}"
+rescue Interrupt
+  puts "Quitting..."
+end
