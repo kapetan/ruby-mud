@@ -93,7 +93,8 @@ module Mud
           dependencies = mod.dependencies.map(&:resolve).delete_if { |m| resolved.include?(m) }
           resolved = resolver.call(dependencies) + resolved unless dependencies.empty?
         end
-      end.call(modules)
+      end
+      resolver.call(modules)
 
       resolved
     end
@@ -154,18 +155,6 @@ module Mud
 
       dirs.keep_if { |dir| File.exists?(dir) }
     end
-
-    #def overload(value, cls_or_hash)
-    #  if cls_or_hash.is_a?(Hash)
-    #    cls_or_hash.each_pair do |cls, func|
-    #      return func.call(value) if value.is_a?(cls)
-    #    end
-
-    #    value
-    #  else
-    #    value.is_a?(cls_or_hash) ? value : yield(value)
-    #  end
-    #end
   end
 
 end

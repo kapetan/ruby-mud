@@ -6,7 +6,7 @@ module Mud
     def initialize(*)
       super
       @context = Mud::Context.new
-      say("(#{@context.dir})")
+      say("in (#{@context.dir})")
     end
 
     map "ls" => "list"
