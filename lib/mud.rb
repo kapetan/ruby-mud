@@ -11,7 +11,7 @@ require 'uri'
 require 'json'
 require 'erb'
 
-%w(utils context dependency result module installed_module server).each { |f| require "mud/#{f}" }
+%w(utils context dependency js_result html_result module installed_module server).each { |f| require "mud/#{f}" }
 
 module Mud
   extend Mud::Utils
