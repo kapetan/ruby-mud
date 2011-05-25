@@ -66,15 +66,17 @@ module Mud
 
     def inline_document(path, opts = {})
       modules, type = analyze_document(path)
+
+      result = inline(modules, opts)
+
       if type == :js
         main = modules.first
-        modules = resolve(modules)
-        modules.delete(main)
-
-        result = inline(modules, opts)
         result << main.content
-        result
+      else
+        result = Mud::HtmlResult.new(path, result)
       end
+
+      result
     end
 
     def resolve(module_or_list)
@@ -85,13 +87,13 @@ module Mud
       resolver = proc do |modules|
         modules.each do |mod|
           next if resolved.include?(mod)
-          resolved << mod
+          resolved.unshift(mod) if mod.is_a?(Mud::InstalledModule)
 
           dep = mod.unresolvable_dependencies.first
           raise Mud::ResolveError.new(dep) if dep
 
           dependencies = mod.dependencies.map(&:resolve).delete_if { |m| resolved.include?(m) }
-          resolved = resolver.call(dependencies) + resolved unless dependencies.empty?
+          resolver.call(dependencies) unless dependencies.empty?
         end
       end
       resolver.call(modules)
@@ -103,7 +105,7 @@ module Mud
       resolved = resolve(module_or_list)
       opts = { :global => false, :compile => nil }.update(opts)
 
-      Mud::Result.new(resolved, opts[:global], opts[:compile])
+      Mud::JsResult.new(resolved, opts[:global], opts[:compile])
     end
 
     private
@@ -126,8 +128,9 @@ module Mud
       doc = Hpricot(html)
 
       doc.search('//script').each do |script_tag|
-        src = script_tag.attributes[:src]
-        if src and not src.match(/^\w+:\/\//)
+        src = script_tag.attributes['src']
+
+        if src and not src.empty? and not src.match(/^\w+:\/\//)
           begin
             content = Mud.render Mud.join(path, src)
             inner_modules << Mud::Module.new(src, content, self)
@@ -138,9 +141,11 @@ module Mud
 
         content = script_tag.inner_html
         if content and not content.empty?
-          inner_modules << Mud::Module.new("#{File.basename(path)}-inner-html-#{inner_modules.length}", content, self)
+          inner_modules << Mud::Module.new("#{File.basename(path)}-embedded-script-#{inner_modules.length}", content, self)
         end
       end
+
+      inner_modules
     end
 
     def dirs(start)
@@ -154,6 +159,10 @@ module Mud
       end
 
       dirs.keep_if { |dir| File.exists?(dir) }
+    end
+
+    def in(*paths)
+      File.join(@dir, *paths)
     end
   end
 

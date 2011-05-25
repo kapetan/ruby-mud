@@ -1,24 +1,23 @@
 module Mud
 
-  class Result
+  class JsResult
     def initialize(modules, global = false, compile = 'simple')
       @modules = modules
       @global = global
       @compile = compile
 
-      reset
+      @appends = []
     end
 
     def to_s
       result = Mud.render :erb => (@global ? 'global.js.erb' : 'inline_modules.js.erb'),
-                  :locals => { :modules => @modules, :appends => @appends }
+                  :locals => { :modules => @modules, :appends => @appends }, :basepath => Mud.js_directory
       @compile ? Mud.compile(result, @compile) : result
     end
 
-    def append(src)
+    def <<(src)
       @appends << src
     end
-    alias :<< :append
   end
   
 end
