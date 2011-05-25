@@ -115,7 +115,7 @@ module Mud
     end
 
     def guess(path)
-      protocol = (path.match(/^(\w)+:\/\//) || [])[1] || 'file'
+      protocol = (path.match(/^(\w+):\/\//) || [])[1] || 'file'
       { protocol.to_sym => path }
     end
   end
