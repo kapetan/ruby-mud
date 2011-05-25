@@ -9,8 +9,8 @@ module Mud
     [:js, :root, :home].each do |name|
       name = "#{name}_directory"
       module_eval %{
-        def #{name}
-          #{name.upcase}
+        def #{name}(*paths)
+          File.join(#{name.upcase}, *paths)
         end
       }
     end
@@ -40,17 +40,28 @@ module Mud
       if location.is_a?(Hash)
         opts = location
       else
-        guess(location).update(opts)
+        opts = guess(location).update(opts)
       end
-
+      
       type, path = opts.first
 
       content = case type
         when :erb, :file then
-          abs = path.start_with?(root_directory) || path.start_with?('/')
-          path = File.join(js_directory, path) unless abs
+          basepath = opts[:basepath] || path
+          basepath = basepath.gsub(/^file:\/\//, '')
+
+          path = opts[:basepath] ? File.join(basepath, path) : basepath
+
+          #abs = path.start_with?(root_directory) || path.start_with?('/')
+          #path = File.join(opts[:basepath] || '', path) unless abs
+
           File.open(path) { |f| f.read }
         when :http then
+          basepath = opts[:basepath] || path
+          basepath = "http://#{basepath}" unless basepath.start_with?('http://')
+
+          path = opts[:basepath] ? URI.join(basepath, path) : basepath
+
           response Net::HTTP.get_response(URI.parse(path))
           response.error! unless (200..299).include?(response.code.to_i)
           response.body
@@ -84,8 +95,12 @@ module Mud
         instance_eval(&block) if block
       end
 
+      def js_directory(*paths)
+        ::Mud.js_directory(*paths)
+      end
+
       def render(opts)
-        ::Mud.render(opts)
+        ::Mud.render(opts.update :basepath => js_directory)
       end
 
       def binding
@@ -101,7 +116,7 @@ module Mud
 
     def guess(path)
       protocol = (path.match(/^(\w)+:\/\//) || [])[1] || 'file'
-      { protocol.to_sym => path.gsub(/^file:\/\//, '') }
+      { protocol.to_sym => path }
     end
   end
 
