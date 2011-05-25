@@ -19,10 +19,6 @@ module Mud
       @appends << src
     end
     alias :<< :append
-
-    def reset
-      @appends = []
-    end
   end
   
 end
