@@ -16,7 +16,7 @@ module Mud
     end
 
     def to_s
-      "#{self.class} #{@path}"
+      "#{self.class} #{@name}"
     end
 
     def ==(other)
