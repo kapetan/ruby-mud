@@ -42,11 +42,12 @@ module Mud
       ref = params[:ref] || request.referrer
 
       js
-      unless ref
+      if ref.nil? or ref == '/'
         host = "#{request.host.split(':').first}:#{settings.port}"
         erb :dev, :locals => { :host => host }
       else
-        # Find dependencies in file and resolve
+        modules = context.resolve_document(ref)
+        context.inline(modules).to_s
       end
     end
 
