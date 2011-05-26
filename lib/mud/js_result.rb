@@ -1,10 +1,12 @@
 module Mud
 
   class JsResult
-    def initialize(modules, global = false, compile = 'simple')
+    def initialize(modules, opts = {})
+      opts = { :global => false, :compile => nil }.update(opts)
+
       @modules = modules
-      @global = global
-      @compile = compile
+      @global = opts[:global]
+      @compile = opts[:compile]
 
       @appends = []
     end

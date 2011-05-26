@@ -47,7 +47,7 @@ module Mud
         erb :dev, :locals => { :host => host }
       else
         modules = context.resolve_document(ref)
-        context.inline(modules).to_s
+        Mud::JsResult.new(modules).to_s
       end
     end
 

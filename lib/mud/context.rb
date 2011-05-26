@@ -103,9 +103,7 @@ module Mud
 
     def inline(module_or_list, opts = {})
       resolved = resolve(module_or_list)
-      opts = { :global => false, :compile => nil }.update(opts)
-
-      Mud::JsResult.new(resolved, opts[:global], opts[:compile])
+      Mud::JsResult.new(resolved, opts)
     end
 
     private

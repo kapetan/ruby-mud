@@ -15,7 +15,7 @@ module Mud
     method_option :compile, :default => nil, :desc => "compile loaded modules"
     def resolve(path)
       modules = @context.resolve_document(path)
-      result = @context.inline(modules, :compile => options[:compile])
+      result = Mud::JsResult.new(modules, :compile => options[:compile])
       say(result.to_s)
     end
 
