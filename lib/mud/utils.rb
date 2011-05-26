@@ -1,5 +1,45 @@
 module Mud
 
+  File.class_eval do
+    def self.hide(file_name)
+      if RbConfig::CONFIG['host_os'] =~ /mswin|windows|cygwin/i
+        `attrib +h "#{file_name}"`
+        file_name
+      else
+        # Assume unix-like
+        parent, base = dirname(file_name), basename(file_name)
+
+        if base.start_with?('.')
+          file_name
+        else
+          hidden = join(parent, ".#{base}")
+          raise IOError.new("Can't hide '#{file_name}' by renaming to '#{hidden} (already exists)") if exists?(hidden)
+          rename(file_name, hidden)
+          hidden
+        end
+      end
+    end
+
+    def self.unhide(file_name)
+      if RbConfig::CONFIG['host_os'] =~ /mswin|windows|cygwin/i
+        `attrib -h "#{file_name}"`
+        file_name
+      else
+        # Assume unix-like
+        parent, base = dirname(file_name), basename(file_name)
+
+        if base.start_with?('.')
+          unhidden = join(parent, base.gsub(/^\.+/, ''))
+          raise IOError.new("Can't unhide '#{file_name}' by renaming to '#{unhidden} (already exists)") if exists?(unhidden)
+          rename(file_name, unhidden)
+          unhidden
+        else
+          file_name
+        end
+      end
+    end
+  end
+
   module Utils
     JS_DIRECTORY = File.expand_path(File.join File.dirname(__FILE__), '..', '..', 'js')
 
@@ -32,10 +72,6 @@ module Mud
       response.body
     end
 
-    def join(basepath, *paths)
-      basepath.start_with?('http://') ? URI.join(basepath, *paths) : File.join(basepath, *paths)
-    end
-
     def render(location, opts = {})
       if location.is_a?(Hash)
         opts = location
@@ -52,9 +88,6 @@ module Mud
 
           path = opts[:basepath] ? File.join(basepath, path) : basepath
 
-          #abs = path.start_with?(root_directory) || path.start_with?('/')
-          #path = File.join(opts[:basepath] || '', path) unless abs
-
           File.open(path) { |f| f.read }
         when :http then
           basepath = opts[:basepath] || path
@@ -62,7 +95,7 @@ module Mud
 
           path = opts[:basepath] ? URI.join(basepath, path) : basepath
 
-          response Net::HTTP.get_response(URI.parse(path))
+          response = Net::HTTP.get_response(URI.parse(path))
           response.error! unless (200..299).include?(response.code.to_i)
           response.body
         else
