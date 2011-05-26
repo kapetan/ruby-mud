@@ -11,7 +11,7 @@ module Mud
 
   class Context
     MODULE_DIRECTORIES  = ['js_modules', 'shared_modules']
-    MODULE_GLOBAL = File.join(Mud::Utils::HOME_DIRECTORY, '.mud', 'js_modules')
+    MODULE_GLOBAL = Mud.home_directory('.mud', 'js_modules')
 
     attr_reader :available_modules, :dir
 
@@ -130,7 +130,7 @@ module Mud
 
         if src and not src.empty? and not src.match(/^\w+:\/\//)
           begin
-            content = Mud.render Mud.join(path, src)
+            content = Mud.render src, :basepath => path
             inner_modules << Mud::Module.new(src, content, self)
           rescue Errno::ENOENT, Net::HTTPError
             # Does not exist. Ignore.
