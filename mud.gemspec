@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.summary     = %q{Simple browser Javascript package manager}
   s.description = %q{Mud is a simple package manager for client-side Javascript. Used for installing new packages and resolving dependencies.}
 
-  s.rubyforge_project = "mud"
+  #s.rubyforge_project = "mud"
 
   s.add_dependency("sinatra", ">= 1.1.2")
   s.add_dependency("thor", ">= 0.14.6")
