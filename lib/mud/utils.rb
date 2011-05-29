@@ -1,40 +1,30 @@
 module Mud
 
   File.class_eval do
-    def self.hide(file_name)
-      if RbConfig::CONFIG['host_os'] =~ /mswin|windows|cygwin/i
-        `attrib +h "#{file_name}"`
+    def self.hide(file_name, force_rename = false)
+      os = RbConfig::CONFIG['host_os']
+
+      if os =~ /mswin|windows|cygwin/i
+        raise IOError.new("Could not hide file '#{file_name}' using attrib +h") unless system("attrib +h '#{file_name}'")
         file_name
       else
         # Assume unix-like
+
         parent, base = dirname(file_name), basename(file_name)
 
         if base.start_with?('.')
           file_name
         else
+          if os =~ /darwin/i and not force_rename
+            # OS X
+            raise IOError.new("Could not hide file '#{file_name}' using SetFile -a -V") unless system("SetFile -a V '#{file_name}'")
+            return file_name
+          end
+
           hidden = join(parent, ".#{base}")
           raise IOError.new("Can't hide '#{file_name}' by renaming to '#{hidden} (already exists)") if exists?(hidden)
           rename(file_name, hidden)
           hidden
-        end
-      end
-    end
-
-    def self.unhide(file_name)
-      if RbConfig::CONFIG['host_os'] =~ /mswin|windows|cygwin/i
-        `attrib -h "#{file_name}"`
-        file_name
-      else
-        # Assume unix-like
-        parent, base = dirname(file_name), basename(file_name)
-
-        if base.start_with?('.')
-          unhidden = join(parent, base.gsub(/^\.+/, ''))
-          raise IOError.new("Can't unhide '#{file_name}' by renaming to '#{unhidden} (already exists)") if exists?(unhidden)
-          rename(file_name, unhidden)
-          unhidden
-        else
-          file_name
         end
       end
     end
