@@ -151,9 +151,9 @@ module Mud
 
       current = File.absolute_path(start)
       while true
-        dirs += MODULE_DIRECTORIES.each { |dir| File.join(current, dir) }
+        dirs += MODULE_DIRECTORIES.map { |dir| File.join(current, dir) }
         break if current == Mud.root_directory
-        current = File.expand_path('..', current)
+        current = File.expand_path(current, '..')
       end
 
       dirs.keep_if { |dir| File.exists?(dir) }
