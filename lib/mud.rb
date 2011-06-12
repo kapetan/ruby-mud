@@ -1,5 +1,6 @@
 $:.unshift File.expand_path(File.dirname(__FILE__))
 
+require 'fileutils'
 require 'net/http'
 require 'uri'
 require 'json'
@@ -15,4 +16,4 @@ module Mud
   extend Mud::Utils
 end
 
-%w(context dependency js_result html_result module installed_module server).each { |f| require "mud/#{f}" }
+%w(api exceptions context dependency js_result html_result module installed_module server).each { |f| require "mud/#{f}" }

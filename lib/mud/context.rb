@@ -1,15 +1,8 @@
 module Mud
 
-  class ResolveError < StandardError
-    attr_reader :name
-
-    def initialize(name_or_dependency)
-      @name = name_or_dependency.is_a?(Mud::Dependency) ? name_or_dependency.name : name_or_dependency
-      super("No module named '#{@name}' in context")
-    end
-  end
-
   class Context
+    include Mud::Exceptions
+
     MODULE_DIRECTORIES  = ['js_modules', 'shared_modules']
     MODULE_GLOBAL = Mud.home_directory('.mud', 'js_modules')
 
@@ -17,6 +10,7 @@ module Mud
 
     def initialize(dir = '.')
       @dir = File.absolute_path(dir)
+      @api = Mud::Api.new
       @available_modules = {}
       reload
     end
@@ -40,24 +34,60 @@ module Mud
       @available_modules.delete_if { |key, _| removed.key?(key) }
     end
 
-    def install(name, opts = {})
-      return if @available_modules[name]# or raise exception
+    def install(name)
+      name = Mud::Module.parse_name(name)
+      install_error(name, "Module ${name} already installed") if @available_modules[name]
 
-      src = nil # download module src from mudhub and write to disk in module global
-      path = nil
+      if not File.exist?(MODULE_GLOBAL)
+        #Dir.mkdir(MODULE_GLOBAL)
+        FileUtils.mkpath(MODULE_GLOBAL)
+        File.hide(MODULE_GLOBAL)
+      end
 
-      @available_modules[name] = Mud::InstalledModule.new(path, self) # check dependencies and download if not present
+      download = proc do |name|
+        begin
+          catch :halt do
+            yield name if block_given?
+            path, dependencies = download_module(name)
+            @available_modules[name] = Mud::InstalledModule.new(path, self)
+
+            dependencies.each do |dep|
+              if not dep.resolvable?
+                download.call(dep.name)
+              end
+            end
+          end
+        rescue Net::HTTPError, Timeout::Error
+          # Reraise error
+          Mud::InstallError.cause!(name)
+        end
+      end
+
+      download.call(name)
     end
 
-    def uninstall(module_or_name)
+    def uninstall(installed_module)
+      begin
+        catch :halt do
+          if block_given?
+            dependents = @available_modules.find_all { |_, mod| mod.depends_on?(installed_module) }
+            yield dependents unless dependents.empty?
+          end
+
+          File.unlink(installed_module.path)
+        end
+      rescue Errno::ENOENT, Errno::EACCES
+        Mud::UninstallError.cause!(installed_module)
+      end
     end
 
     def module(name)
+      name = Mud::Module.parse_name(name)
       @available_modules[name]
     end
 
     def module!(name)
-      @available_modules[name] || (raise Mud::ResolveError.new(name))
+      @available_modules[name] || resolve_error(name)
     end
 
     def resolve_document(path)
@@ -90,7 +120,7 @@ module Mud
           resolved.unshift(mod) if mod.is_a?(Mud::InstalledModule)
 
           dep = mod.unresolvable_dependencies.first
-          raise Mud::ResolveError.new(dep) if dep
+          resolve_error(dep) if dep
 
           dependencies = mod.dependencies.map(&:resolve).delete_if { |m| resolved.include?(m) }
           resolver.call(dependencies) unless dependencies.empty?
@@ -107,6 +137,17 @@ module Mud
     end
 
     private
+
+    def download_module(name)
+      name = "#{name}.js" if not name.end_with?('.js')
+      response = @api.get(name)
+
+      path = File.join(MODULE_GLOBAL, name)
+      File.open(path, 'w') { |f| f.write(response.body) }
+
+      deps = response['x-dependencies']
+      return path, (deps ? deps.split(',') : []).map { |name| Mud::Dependency.new(name, self) }
+    end
 
     def analyze_document(path)
       content = Mud.render path
@@ -153,14 +194,10 @@ module Mud
       while true
         dirs += MODULE_DIRECTORIES.map { |dir| File.join(current, dir) }
         break if current == Mud.root_directory
-        current = File.expand_path(current, '..')
+        current = File.expand_path('..', current)
       end
 
       dirs.keep_if { |dir| File.exists?(dir) }
-    end
-
-    def in(*paths)
-      File.join(@dir, *paths)
     end
   end
 

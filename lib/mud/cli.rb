@@ -1,3 +1,5 @@
+require 'mud/version'
+
 module Mud
 
   class CLI < Thor
@@ -58,6 +60,29 @@ module Mud
           msg = m.name + (options[:path] ? " => #{m.path}" : '')
           say(msg)
         end
+      end
+    end
+
+    desc "version", "prints the current version"
+    def version
+      say(Mud::VERSION)
+    end
+
+    desc "install NAME", "fetch and install a module + dependencies"
+    def install(name)
+      @context.install(name) do |name|
+        say("Downloading module '#{name}'")
+      end
+    end
+
+    desc "uninstall NAME", "uninstall a module"
+    def uninstall(name)
+      mod = @context.module!(name)
+
+      @context.uninstall(mod) do |dependents|
+        say("Modules #{dependents.map { |m| m.name }.join(',')} depend on '#{mod.name}'")
+        abort = yes?("Abort?")
+        throw :halt if abort
       end
     end
   end

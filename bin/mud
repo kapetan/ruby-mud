@@ -8,7 +8,9 @@ require 'mud/cli'
 begin
   Mud::CLI.start
 rescue Mud::ResolveError => err
-  puts err.message, "Try running: mud install #{err.name}"
+  puts err.message, "Try running: mud install #{err.module_name}"
+rescue Mud::ModuleError => err
+  puts err.message
 rescue Interrupt
   puts "Quitting..."
 end

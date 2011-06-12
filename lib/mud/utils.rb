@@ -24,6 +24,7 @@ module Mud
           hidden = join(parent, ".#{base}")
           raise IOError.new("Can't hide '#{file_name}' by renaming to '#{hidden} (already exists)") if exists?(hidden)
           rename(file_name, hidden)
+          
           hidden
         end
       end

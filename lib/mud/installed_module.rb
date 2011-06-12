@@ -4,7 +4,7 @@ module Mud
     attr_reader :path, :modified
 
     def initialize(path, context)
-      super(path, File.open(path) { |f| f.read }, context)
+      super(path, Mud.render(:file => path), context)
       @content = nil
 
       @path = path
@@ -12,7 +12,7 @@ module Mud
     end
 
     def content
-      File.open(@path) { |f| f.read }
+      Mud.render :file => @path
     end
   end
 
