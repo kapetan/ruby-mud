@@ -8,7 +8,7 @@ module Mud
     def initialize(*)
       super
       @context = Mud::Context.new
-      say("(in #{@context.dir})")
+      say("(in #{@context.dir})", Thor::Shell::Color::BLUE)
     end
 
     map "ls" => "list"
@@ -80,9 +80,9 @@ module Mud
       mod = @context.module!(name)
 
       @context.uninstall(mod) do |dependents|
-        say("Modules #{dependents.map { |m| m.name }.join(',')} depend on '#{mod.name}'")
-        abort = yes?("Abort?")
-        throw :halt if abort
+        say("Modules #{dependents.map { |m| "'#{m.name}'" }.join(',')} depend on '#{mod.name}'")
+        continue = yes?("Continue (y/n)?")
+        throw :halt if not continue
       end
     end
   end

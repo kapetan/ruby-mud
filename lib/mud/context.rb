@@ -70,7 +70,7 @@ module Mud
       begin
         catch :halt do
           if block_given?
-            dependents = @available_modules.find_all { |_, mod| mod.depends_on?(installed_module) }
+            dependents = @available_modules.values.find_all { |mod| mod.depends_on?(installed_module) }
             yield dependents unless dependents.empty?
           end
 
