@@ -34,9 +34,11 @@ module Mud
       @available_modules.delete_if { |key, _| removed.key?(key) }
     end
 
-    def install(name)
+    def install(name, opts = {})
       name = Mud::Module.parse_name(name)
-      install_error(name, "Module ${name} already installed") if @available_modules[name]
+      opts = { :force => false, :fetch_dependencies => true }.update(opts)
+
+      install_error(name, "Module ${name} already installed") if @available_modules[name] and not opts[:force]
 
       if not File.exist?(MODULE_GLOBAL)
         #Dir.mkdir(MODULE_GLOBAL)
@@ -48,8 +50,11 @@ module Mud
         begin
           catch :halt do
             yield name if block_given?
+
             path, dependencies = download_module(name)
             @available_modules[name] = Mud::InstalledModule.new(path, self)
+
+            throw :halt unless opts[:fetch_dependencies]
 
             dependencies.each do |dep|
               if not dep.resolvable?
@@ -75,6 +80,7 @@ module Mud
           end
 
           File.unlink(installed_module.path)
+          @available_modules.delete(installed_module.name)
         end
       rescue Errno::ENOENT, Errno::EACCES
         Mud::UninstallError.cause!(installed_module)

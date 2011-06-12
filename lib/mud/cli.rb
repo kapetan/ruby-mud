@@ -75,6 +75,12 @@ module Mud
       end
     end
 
+    desc "update NAME", "update an already installed module"
+    def update(name)
+      mod = @context.module!(name)
+      @context.install(mod.name, :force => true, :fetch_dependencies => false)
+    end
+
     desc "uninstall NAME", "uninstall a module"
     def uninstall(name)
       mod = @context.module!(name)
