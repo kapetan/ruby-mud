@@ -1,6 +1,8 @@
-Ruby port of Mud (package manager for client-side Javascript). See [http://github.com/mafintosh/mud](http://github.com/mafintosh/mud) for (non-existing) documentation.
+Ruby port of Mud (package manager for client-side Javascript). See [http://github.com/mafintosh/mud](http://github.com/mafintosh/mud) for documentation. Ruby-mud's command line interface follows the same conventions as those of Javascript Mud. Usage information can be obtained by running `$ mud help` after installation.
 
 ## Install
+
+Ruby-mud is available through RubyGems:
 
 ### Gem
 
