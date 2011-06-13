@@ -22,7 +22,7 @@ module Mud
         FileUtils.mkpath(MODULE_GLOBAL)
         File.hide(MODULE_GLOBAL)
 
-        Dir.glob(Mud.mud_directory, 'js_modules', '*.js') do |path|
+        Dir.glob(Mud.mud_directory('js_modules', '*.js')) do |path|
           mod = File.join(MODULE_GLOBAL, File.basename(path))
           FileUtils.cp(path, mod)
         end
