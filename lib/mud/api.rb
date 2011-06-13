@@ -7,7 +7,7 @@ module Mud
     SERVER_TIMEOUT = 5 #seconds
 
     def get(module_name, &block)
-      perform_request('GET', "/r/#{module_name}")
+      perform_request('GET', "/r/#{js(module_name)}")
     end
 
     def publish(mod, name = nil)
