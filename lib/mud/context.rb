@@ -6,7 +6,7 @@ module Mud
     MODULE_DIRECTORIES  = ['js_modules', 'shared_modules']
     MODULE_GLOBAL = Mud.home_directory('.mud', 'js_modules')
 
-    attr_reader :available_modules, :dir
+    attr_reader :available_modules, :dir, :api
 
     def initialize(dir = '.')
       @dir = File.absolute_path(dir)
@@ -18,7 +18,7 @@ module Mud
     end
 
     def setup
-      if not File.exist?(MODULE_GLOBAL)
+      if not File.exists?(MODULE_GLOBAL)
         FileUtils.mkpath(MODULE_GLOBAL)
         File.hide(MODULE_GLOBAL)
 

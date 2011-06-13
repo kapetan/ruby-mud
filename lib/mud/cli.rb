@@ -68,6 +68,17 @@ module Mud
       say(Mud::VERSION)
     end
 
+    desc "publish [ALIAS] URL", "publish a module"
+    def publish(name, path = nil)
+      unless path
+        path = name
+        name = nil
+      end
+
+      mod = Mud::Module.new(path, Mud.render(:file => path), @context)
+      @context.api.publish(mod, name)
+    end
+
     desc "install NAME", "fetch and install a module + dependencies"
     def install(name)
       @context.install(name) do |name|
