@@ -12,7 +12,21 @@ module Mud
       @dir = File.absolute_path(dir)
       @api = Mud::Api.new
       @available_modules = {}
+
+      setup
       reload
+    end
+
+    def setup
+      if not File.exist?(MODULE_GLOBAL)
+        FileUtils.mkpath(MODULE_GLOBAL)
+        File.hide(MODULE_GLOBAL)
+
+        Dir.glob(Mud.mud_directory, 'js_modules', '*.js') do |path|
+          mod = File.join(MODULE_GLOBAL, File.basename(path))
+          FileUtils.cp(path, mod)
+        end
+      end
     end
 
     def reload
@@ -39,12 +53,6 @@ module Mud
       opts = { :force => false, :fetch_dependencies => true }.update(opts)
 
       install_error(name, "Module ${name} already installed") if @available_modules[name] and not opts[:force]
-
-      if not File.exist?(MODULE_GLOBAL)
-        #Dir.mkdir(MODULE_GLOBAL)
-        FileUtils.mkpath(MODULE_GLOBAL)
-        File.hide(MODULE_GLOBAL)
-      end
 
       download = proc do |name|
         begin

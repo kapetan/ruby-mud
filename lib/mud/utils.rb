@@ -32,12 +32,12 @@ module Mud
   end
 
   module Utils
-    JS_DIRECTORY = File.expand_path(File.join File.dirname(__FILE__), '..', '..', 'js')
+    MUD_DIRECTORY = File.expand_path(File.join File.dirname(__FILE__), '..', '..')
 
     ROOT_DIRECTORY = File.absolute_path('/')
     HOME_DIRECTORY = Dir.home
 
-    [:js, :root, :home].each do |name|
+    [:mud, :root, :home].each do |name|
       name = "#{name}_directory"
       module_eval %{
         def #{name}(*paths)
@@ -120,7 +120,7 @@ module Mud
       end
 
       def js_directory(*paths)
-        ::Mud.js_directory(*paths)
+        ::Mud.mud_directory('js', *paths)
       end
 
       def render(opts)
