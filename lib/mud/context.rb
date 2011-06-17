@@ -104,12 +104,21 @@ module Mud
       @available_modules[name] || resolve_error(name)
     end
 
-    def resolve_document(path)
-      resolve analyze_document(path).first
+    def resolve_document(path, content = nil)
+      resolve analyze_document(path, content).first
     end
 
-    def inline_document(path, opts = {})
-      modules, type = analyze_document(path)
+    def inline_document(path, content = nil, opts = nil)
+      unless opts
+        if content.is_a?(Hash)
+          opts = content
+          content = nil
+        else
+          opts = {}
+        end
+      end
+
+      modules, type, content = analyze_document(path, content)
 
       result = inline(modules, opts)
 
@@ -117,7 +126,7 @@ module Mud
         main = modules.first
         result << main.content
       else
-        result = Mud::HtmlResult.new(path, result)
+        result = Mud::HtmlResult.new(content, result)
       end
 
       result
@@ -163,8 +172,8 @@ module Mud
       return path, (deps ? deps.split(',') : []).map { |name| Mud::Dependency.new(name, self) }
     end
 
-    def analyze_document(path)
-      content = Mud.render path
+    def analyze_document(path, content)
+      content = Mud.render(path) unless content
       type = content.match(/^\s*</) ? :html : :js
 
       modules = if type == :html
@@ -173,7 +182,7 @@ module Mud
         [Mud::Module.new(path, content, self)]
       end
 
-      return modules, type
+      return modules, type, content
     end
 
     def analyze_html(path, html)

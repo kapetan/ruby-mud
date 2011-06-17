@@ -67,7 +67,7 @@ module Mud
       if location.is_a?(Hash)
         opts = location
       else
-        opts = guess(location).update(opts)
+        opts = guess(opts[:basepath], location).update(opts)
       end
       
       type, path = opts.first
@@ -84,9 +84,9 @@ module Mud
           basepath = opts[:basepath] || path
           basepath = "http://#{basepath}" unless basepath.start_with?('http://')
 
-          path = opts[:basepath] ? URI.join(basepath, path) : basepath
+          path = opts[:basepath] ? URI.join(basepath, path) : URI.parse(basepath)
 
-          response = Net::HTTP.get_response(URI.parse(path))
+          response = Net::HTTP.get_response(path)
           response.error! unless (200..299).include?(response.code.to_i)
           response.body
         else
@@ -138,8 +138,8 @@ module Mud
       end
     end
 
-    def guess(path)
-      protocol = (path.match(/^(\w+):\/\//) || [])[1] || 'file'
+    def guess(base, path)
+      protocol = ((base || path).match(/^(\w+):\/\//) || [])[1] || 'file'
       { protocol.to_sym => path }
     end
   end

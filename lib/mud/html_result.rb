@@ -6,7 +6,13 @@ module Mud
       @js = js
     end
 
+    def empty?
+      @js.empty?
+    end
+
     def to_s
+      return @html if empty?
+
       doc = html_doc
       script = doc.search('//script').find { |script_tag| /.*\/dev$/.match script_tag.attributes['src'] }
 
@@ -32,7 +38,7 @@ module Mud
     private
 
     def html_doc
-      Hpricot(Mud.render @html)
+      Hpricot(@html)
     end
   end
 

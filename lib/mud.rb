@@ -16,4 +16,4 @@ module Mud
   extend Mud::Utils
 end
 
-%w(api exceptions context dependency js_result html_result module installed_module server).each { |f| require "mud/#{f}" }
+%w(api exceptions context dependency js_result html_result module installed_module).each { |f| require "mud/#{f}" }

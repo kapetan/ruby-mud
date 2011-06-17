@@ -1,4 +1,5 @@
 require 'mud/version'
+require 'mud/server'
 
 module Mud
 
@@ -28,7 +29,7 @@ module Mud
       say(result.to_s)
     end
 
-    desc "module A,B,...,C", "load in these modules"
+    desc "modules A,B,...,C", "load in these modules"
     method_option :compile, :default => nil, :desc => "compile loaded modules"
     #method_option :output, :default => nil, :desc => "output file"
     def modules(modules)

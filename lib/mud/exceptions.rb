@@ -26,7 +26,7 @@ module Mud
 
     def initialize(name, msg = self.class.default_message)
       @module_name = name.respond_to?(:name) ? name.name : name
-      super(msg.gsub(/\$\{name\}/, "'#{name}'"))
+      super(msg.gsub(/\$\{name\}/, "'#{@module_name}'"))
     end
   end
 
@@ -60,16 +60,5 @@ module Mud
       }
     end
   end
-
-=begin
-  class ResolveError < StandardError
-    attr_reader :name
-
-    def initialize(name_or_dependency)
-      @name = name_or_dependency.is_a?(Mud::Dependency) ? name_or_dependency.name : name_or_dependency
-      super("No module named '#{@name}' in context")
-    end
-  end
-=end
 
 end
