@@ -8,9 +8,7 @@ module Mud
 
     class Railtie < Rails::Railtie
       initializer 'mud.rack_middleware' do |app|
-        if ['test', 'development'].include?(Rails.env)
-          app.config.middleware.use Mud::Integrations::Rack, File.join(Rails.public_path, 'javascripts')
-        end
+        app.config.middleware.use Mud::Integrations::Rack, File.join(Rails.public_path, 'javascripts')
       end
     end
 
