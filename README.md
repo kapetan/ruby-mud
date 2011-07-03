@@ -36,7 +36,7 @@ Which by default lists all dependencies for files in the javascripts directory. 
 
     rake mud:build
     
-Builds all the dependencies into files which can be included in the html document. As `mud:dependencies` it checks the files in javascripts directory. This can also be changed as mentioned above. Every file in the directory is checked for dependencies and these are then compiled and saved in `public/javascripts/mud`.
+As with `mud:dependencies` it checks the files in the javascripts directory. This can also be changed as mentioned above. Every file in the directory is checked for dependencies and these are then compiled and saved in `public/javascripts/mud`.
   
 ## Rack
 
