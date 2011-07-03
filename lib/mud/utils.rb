@@ -79,14 +79,18 @@ module Mud
 
           path = opts[:basepath] ? File.join(basepath, path) : basepath
 
-          File.open(path) { |f| f.read }
+          File.open(path, 'rb') { |f| f.read }
         when :http then
           basepath = opts[:basepath] || path
           basepath = "http://#{basepath}" unless basepath.start_with?('http://')
 
           path = opts[:basepath] ? URI.join(basepath, path) : URI.parse(basepath)
 
-          response = Net::HTTP.get_response(path)
+          #response = Net::HTTP.get_response(path)
+          response = Net::HTTP.start(path.host, path.port, :open_timeout => 3, :read_timeout => 3) do |http|
+            http.get("#{path.path}?#{path.query}")
+          end
+
           response.error! unless (200..299).include?(response.code.to_i)
           response.body
         else
@@ -105,6 +109,15 @@ module Mud
     private
 
     class LocalsBinding < BasicObject
+      JS_ESCAPE_MAP	=	{
+        '\\'    => '\\\\',
+        '</'    => '<\/',
+        "\r\n"  => '\n',
+        "\n"    => '\n',
+        "\r"    => '\n',
+        '"'     => '\\"',
+        "'"     => "\\'" }
+
       def initialize(locals, &block)
         @_locals = locals
 
@@ -122,6 +135,16 @@ module Mud
       def js_directory(*paths)
         ::Mud.mud_directory('js', *paths)
       end
+
+      def js_escape(javascript)
+        if javascript
+          result = javascript.gsub(/(\\|<\/|\r\n|[\n\r"'])/) {|match| JS_ESCAPE_MAP[match] }
+          javascript.html_safe? ? result.html_safe : result
+        else
+          ''
+        end
+      end
+      alias :j :js_escape
 
       def render(opts)
         ::Mud.render(opts.update :basepath => js_directory)

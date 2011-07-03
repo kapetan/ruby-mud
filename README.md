@@ -26,11 +26,21 @@ Mud can be used with Rails for developing javascript modules. Add following line
 
     gem 'mud', :require => 'mud/integrations/rails'
   
-This includes a Rack module which checks all responses for dependencies and inserts them into the document just after the `<head>` tag (or raises a ResolveError if a required module is not installed). Mud looks for modules in `public/javascripts/js_modules` and the global module directory. This is not meant for production environment only for development.
+This includes a Rails after filter which checks all responses for dependencies and inserts them into the document just after the `<head>` tag (or raises a ResolveError if a required module is not installed). Mud looks for modules in `public/javascripts/js_modules` and the global module directory. This is not meant to be used in production environment only for development.
+
+There are a couple Rake tasks defined which can be used to prepare the javascript modules for the production environment. These include
+
+    rake mud:dependencies
+
+Which by default lists all dependencies for files in the javascripts directory. It is also possible to specify which files should be checked for dependencies, by giving the path to the directory as the first argument to the task.
+
+    rake mud:build
+    
+Builds all the dependencies into files which can be included in the html document. As `mud:dependencies` it checks the files in javascripts directory. This can also be changed as mentioned above. Every file in the directory is checked for dependencies and these are then compiled and saved in `public/javascripts/mud`.
   
-The same middleware can be used in other Rack environments. Add something like the following to the `config.ru` file
+## Rack
+
+Rack middleware is also available. Add something like the following to the `config.ru` file
 
     require 'mud/integrations/rack'
     use Mud::Integrations::Rack if ENV['RACK_ENV'] == 'development'
-
-

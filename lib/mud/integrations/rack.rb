@@ -16,11 +16,11 @@ module Mud
 
         unless body.empty?
           body = @context.inline_document(request.url, body.join('')).to_s
+          headers['Content-Length'] = body.bytesize.to_s
+          body = [body]
         end
-        
-        headers['Content-Length'] = body.bytesize.to_s
 
-        [status, headers, [body]]
+        [status, headers, body]
       end
     end
 

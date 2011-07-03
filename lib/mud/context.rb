@@ -6,6 +6,8 @@ module Mud
     MODULE_DIRECTORIES  = ['js_modules', 'shared_modules']
     MODULE_GLOBAL = Mud.home_directory('.mud', 'js_modules')
 
+    IGNORE_SRC = [/^$/, /^\w+:\/\//, /.*\/dev$/]
+
     attr_reader :available_modules, :dir, :api
 
     def initialize(dir = '.')
@@ -172,6 +174,10 @@ module Mud
       return path, (deps ? deps.split(',') : []).map { |name| Mud::Dependency.new(name, self) }
     end
 
+    def ignore_src?(src)
+      IGNORE_SRC.any? { |r| r =~ src }
+    end
+
     def analyze_document(path, content)
       content = Mud.render(path) unless content
       type = content.match(/^\s*</) ? :html : :js
@@ -192,11 +198,11 @@ module Mud
       doc.search('//script').each do |script_tag|
         src = script_tag.attributes['src']
 
-        if src and not src.empty? and not src.match(/^\w+:\/\//)
+        if src and not ignore_src?(src)
           begin
             content = Mud.render src, :basepath => path
             inner_modules << Mud::Module.new(src, content, self)
-          rescue Errno::ENOENT, Net::HTTPError
+          rescue Errno::ENOENT, Net::HTTPError, Timeout::Error
             # Does not exist. Ignore.
           end
         end

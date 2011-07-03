@@ -6,6 +6,7 @@ require 'uri'
 require 'json'
 require 'erb'
 require 'rbconfig'
+require 'set'
 
 require 'sinatra/base'
 require 'thor'

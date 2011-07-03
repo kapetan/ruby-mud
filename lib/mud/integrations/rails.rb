@@ -1,14 +1,18 @@
 require 'mud'
 require 'rails'
 
-require 'mud/integrations/rack'
+require 'mud/integrations/rails_filter'
 
 module Mud
   module Integrations
 
-    class Railtie < Rails::Railtie
-      initializer 'mud.rack_middleware' do |app|
-        app.config.middleware.use Mud::Integrations::Rack, File.join(Rails.public_path, 'javascripts')
+    class Railtie < ::Rails::Railtie
+      rake_tasks do
+        load 'mud/integrations/tasks.rb'
+      end
+
+      initializer 'mud.rails_filter' do
+        ActionController::Base.send(:include, Mud::Integrations::Rails)
       end
     end
 
